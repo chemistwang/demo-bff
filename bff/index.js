@@ -21,6 +21,12 @@ router.get("/", async (ctx) => {
     user.invoke("getUserInfo", [userId]),
     post.invoke("getPostCount", [userId]),
   ]);
+  // 数据的裁剪，把不需要的信息和字符裁剪掉，不返回给客户端
+  delete userInfo.password;
+  // 数据脱敏
+  userInfo.phone = userInfo.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+  // 数据适配
+  userInfo.avatar = "http://www.chemputer.top/" + userInfo.avatar;
   ctx.body = {
     userInfo,
     postCount,
