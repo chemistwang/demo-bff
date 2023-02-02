@@ -3,6 +3,7 @@ const router = require("koa-router")();
 const logger = require("koa-logger");
 const rpcMiddleware = require("./middleware/rpc");
 const cacheMiddleware = require("./middleware/cache");
+const mqMiddleware = require("./middleware/mq");
 const app = new Koa();
 
 app.use(logger());
@@ -13,9 +14,20 @@ app.use(
   })
 );
 app.use(cacheMiddleware());
+app.use(mqMiddleware());
 
 router.get("/", async (ctx) => {
   const userId = ctx.query.userId;
+  ctx.channels.logger.sendToQueue(
+    "logger",
+    Buffer.from(
+      JSON.stringify({
+        method: ctx.method,
+        path: ctx.path,
+        userId,
+      })
+    )
+  );
   //现在想把用户的访问情况写入文件持久化保存
   const cacheKey = `${ctx.method}-${ctx.path}-${userId}`;
   let cacheData = await ctx.cache.get(cacheKey);
